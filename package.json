@@ -1,6 +1,6 @@
 {
   "homepage": "http://alenjdev.github.io/missionStatus",
-  "name": "debug",
+  "name": "mission",
   "private": true,
   "version": "0.0.0",
   "scripts": {
