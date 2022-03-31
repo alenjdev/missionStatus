@@ -1,17 +1,13 @@
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useLayoutEffect } from "react";
 
 import { ModuleData, App } from "@formant/data-sdk";
 import { TableComponent } from "../TableComponent/index";
-import { ErrorMsg } from "../ErrorMsg/ErrorMsg";
 
 export const Table: FC = () => {
-  const [errorMessage, setErrorMessage] = useState("Waiting for data...");
-  const [state, setState] = useState({
-    rtkStatus: undefined,
-    trackStatus: undefined,
-  });
+  const [rtk, setRtk] = useState();
+  const [track, setTrack] = useState();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     App.addModuleDataListener(receiveModuleData);
   }, []);
 
@@ -20,23 +16,27 @@ export const Table: FC = () => {
     if (Object.keys(streams).length === 0) {
       throw new Error("No streams.");
     }
-    let currentState = state;
-    Object.keys(streams).forEach((stream, idx) => {
+    Object.keys(streams).forEach((stream) => {
       const latestState = getLatestData(streams, stream);
       if (typeof latestState !== "string" && latestState !== undefined) {
-        if (streams[stream].data[0].name === "rtk.status")
-          currentState.rtkStatus = latestState.values[0];
-        if (streams[stream].data[0].name === "track.status")
-          currentState.trackStatus = latestState.values[0];
-      }
-      if (JSON.stringify(currentState) !== JSON.stringify(state)) {
-        setState(currentState);
+        if (streams[stream].data[0].name === "rtk.status") {
+          setRtk(latestState.values[0]);
+        }
+        if (streams[stream].data[0].name === "track.status") {
+          setTrack(latestState.values[0]);
+        }
       }
     });
   };
 
   return (
-    <TableComponent topicStats={state} tableHeaders={["Item", "Status"]} />
+    <TableComponent
+      topicStats={{
+        rtkStatus: rtk,
+        trackStatus: track,
+      }}
+      tableHeaders={["Item", "Status"]}
+    />
   );
 };
 
