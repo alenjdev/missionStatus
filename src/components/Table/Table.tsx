@@ -7,6 +7,14 @@ export const Table: FC = () => {
   const [rtk, setRtk] = useState();
   const [track, setTrack] = useState();
 
+  const shouldClearData = (
+    lastUpdate: number,
+    scruttingTime: number,
+    seconds: number
+  ) => {
+    return lastUpdate + seconds * 1000 < scruttingTime;
+  };
+
   useLayoutEffect(() => {
     App.addModuleDataListener(receiveModuleData);
   }, []);
@@ -18,12 +26,20 @@ export const Table: FC = () => {
     }
     Object.keys(streams).forEach((stream) => {
       const latestState = getLatestData(streams, stream);
-      if (typeof latestState !== "string" && latestState !== undefined) {
+      if (typeof latestState[1] !== "string" && latestState[1] !== undefined) {
         if (streams[stream].data[0].name === "rtk.status") {
-          setRtk(latestState.values[0]);
+          if (shouldClearData(latestState[0], newValue.time, 10)) {
+            setRtk(undefined);
+            return;
+          }
+          setRtk(latestState[1].values[0]);
         }
         if (streams[stream].data[0].name === "track.status") {
-          setTrack(latestState.values[0]);
+          if (shouldClearData(latestState[0], newValue.time, 10)) {
+            setTrack(undefined);
+            return;
+          }
+          setTrack(latestState[1].values[0]);
         }
       }
     });
@@ -41,11 +57,9 @@ export const Table: FC = () => {
 };
 
 const getLatestData = (
-  moduleData: {
-    [stream_name: string]: Stream;
-  },
+  moduleData: any,
   stream: string
-): string | undefined => {
+): any | string | undefined => {
   if (moduleData[stream] === undefined) {
     return "No stream.";
   }
@@ -63,5 +77,5 @@ const getLatestData = (
   if (!latestPoint) {
     return "No datapoints.";
   }
-  return latestPoint[1];
+  return latestPoint;
 };
